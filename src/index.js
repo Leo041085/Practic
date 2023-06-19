@@ -4,9 +4,10 @@
 // img : https://developer.themoviedb.org/docs/image-basics
 // scroll : https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
 
-const moviesList = document.querySelector('.js-list');
-const btnLoad = document.querySelector('.js-btn');
-let page = 1;
+// const moviesList = document.querySelector('.js-list');
+// const btnLoad = document.querySelector('.js-btn');
+// const guard = document.querySelector('.js-guard');
+// let page = 1;
 
 function serviceMovie(page = 1) {
   const BASE_URL = 'https://api.themoviedb.org/3';
@@ -21,28 +22,69 @@ function serviceMovie(page = 1) {
     }
   );
 }
-serviceMovie().then((data) => {
-    moviesList.insertAdjacentHTML('beforeend', createMarkup(data.results));
-    btnLoad.hidden = false;
-})
-btnLoad.addEventListener('click', handlerBtnLoadMore);
+// serviceMovie().then(data => {
+//   moviesList.insertAdjacentHTML('beforeend', createMarkup(data.results));
+//   btnLoad.hidden = false;
+// });
+// btnLoad.addEventListener('click', handlerBtnLoadMore);
 
-function handlerBtnLoadMore() {
-    page += 1;
-    serviceMovie(page).then((data) => {
+// function handlerBtnLoadMore() {
+//   page += 1;
+//     serviceMovie(page).then(data => {
+//       moviesList.insertAdjacentHTML('beforeend', createMarkup(data.results));
+//     if (data.page >= 500) {
+//       btnLoad.hidden = true;
+//     }
+//   });
+// }
+
+// function createMarkup(array) {
+//   return array
+//     .map(({ id, title, poster_path }) => {
+//       return `<li class="js-item" data-id='${id}'>
+//             <img src="https://image.tmdb.org/t/p/w400${poster_path}" alt="${title}">
+//             <h3>${title}</h3>
+//         </li>`;
+//     })
+//     .join('');
+// }
+
+// scroll
+const moviesList = document.querySelector('.js-list');
+const guard = document.querySelector('.js-guard');
+let page = 1;
+
+const options = {
+  root: null,
+  rootMargin: '500px',
+  threshold: 0,
+};
+const observer = new IntersectionObserver(loadMore, options);
+function loadMore(entries, observer) {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      page += 1;
+      serviceMovie(page).then(data => {
         moviesList.insertAdjacentHTML('beforeend', createMarkup(data.results));
         if (data.page >= 500) {
-            btnLoad.hidden = true
+          observer.unobserve(guard);
         }
-    })
+      });
+    }
+  });
 }
-
-function createMarkup(arr) {
-    return arr.map(({ id, title, poster_path }) => {
-        return `<li class="js-item" data-id='${id}'>
+function createMarkup(array) {
+  return array
+    .map(({ id, title, poster_path }) => {
+      return `<li class="js-item" data-id='${id}'>
             <img src="https://image.tmdb.org/t/p/w400${poster_path}" alt="${title}">
             <h3>${title}</h3>
         </li>`;
-    }).join('');
-    
-};
+    })
+    .join('');
+}
+serviceMovie().then(data => {
+    moviesList.insertAdjacentHTML('beforeend', createMarkup(data.results));
+    console.log(guard);
+    observer.observe(guard)
+});
